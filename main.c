@@ -76,6 +76,7 @@ bool flash_test() {
     fflush(stdout);
 
     uint32_t tested_size = 0;
+    uint32_t last_verified_size = 0;  // ✅ Track last successfully verified flash size
     uint8_t test_data[SPI_FLASH_SECTOR_SIZE];
     uint8_t readback[SPI_FLASH_SECTOR_SIZE];
 
@@ -98,17 +99,18 @@ bool flash_test() {
             if (readback[i] != test_data[i]) {
                 printf("❌ Flash corruption at %.2f MB (0x%x), offset %d\r\n", addr / (1024.0 * 1024.0), addr, i);
                 fflush(stdout);
-                printf("Detected actual flash size: %.2f MB\r\n", tested_size / (1024.0 * 1024.0));
+                printf("Detected actual flash size: %.2f MB\r\n", last_verified_size / (1024.0 * 1024.0));
                 return false;
             }
         }
 
         tested_size += SPI_FLASH_SECTOR_SIZE;
-        printf("✅ Verified %.2f MB of flash\r\n", tested_size / (1024.0 * 1024.0));
+        last_verified_size = addr + SPI_FLASH_SECTOR_SIZE;  // ✅ Store last verified flash position
+        printf("✅ Verified %.2f MB of flash\r\n", last_verified_size / (1024.0 * 1024.0));
         fflush(stdout);
     }
 
-    printf("✅ Full flash test PASSED! Total verified flash: %.2f MB\r\n", tested_size / (1024.0 * 1024.0));
+    printf("✅ Full flash test PASSED! Total verified flash: %.2f MB\r\n", last_verified_size / (1024.0 * 1024.0));
     fflush(stdout);
     return true;
 }
